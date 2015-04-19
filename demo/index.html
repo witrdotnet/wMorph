@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+	<title>wMorph</title>
+	<style>
+		#container{ background:cyan; }
+	</style>
+</head>
+<body>
+	<div id="container" class="container"></div>
+	<script type="text/javascript" src="http://jindo.dev.naver.com/collie/deploy/collie.min.js"></script>
+	<script type="text/javascript" src="../src/wmorph.js"></script>
+	<script type="text/javascript" src="./wmorph-demo-path.js"></script>
+	<script language="javascript">
+		wmorph.init(collie,{density: 100, width:500, height:400, color: null, radius: null, path: pathdemo.path_m, pathopts:{x:-150,y:50}, repeat: true});
+		wmorph.morph(pathdemo.path_plus,{x:-50,y:50});
+		wmorph.morph(pathdemo.path_n,{x:-150,y:50});
+		wmorph.morph(pathdemo.path_equal,{x:-50,y:50});
+		wmorph.morph(pathdemo.path_heart,{x:500,y:250});
+		wmorph.start();
+	</script>
+</body></html>
