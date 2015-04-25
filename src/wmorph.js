@@ -2,6 +2,8 @@ var wmorph = {
 	collie : null,
 	timeline : null,
 	timecursor : 0,
+	delayTransition : 500,
+	delayBetweenTransitions : 500,
 	pathFirst : [],
 	pathFirstOpts: null,
 	oToLast : [],
@@ -16,18 +18,23 @@ var wmorph = {
 	init : function(collie, opts) {
 		opts = opts || {};
 		this.collie = collie;
-		this.timeline = collie.Timer.timeline();
-		this.repeat = opts.repeat || false;
 		this.collie.Renderer.DEBUG_RENDERING_MODE = "canvas";
-		this.numParticles = opts.density || 100,
-		this.htSize.width = opts.width || 800;
-		this.htSize.height = opts.height || 500;
+		this.timeline = collie.Timer.timeline();
+
+		this.delayTransition = opts.delayTransition || this.delayTransition;
+		this.delayBetweenTransitions = opts.delayBetweenTransitions || this.delayBetweenTransitions;
+		this.repeat = opts.repeat || this.repeat;
+		this.numParticles = opts.density || this.numParticles,
+		this.htSize.width = opts.width || this.htSize.width;
+		this.htSize.height = opts.height || this.htSize.height;
 		this.oLayer = new this.collie.Layer({
 			width : this.htSize.width,
 			height : this.htSize.height
 		});
 		opts.path = opts.path || [[Math.round(Math.random(1)*this.htSize.width), Math.round(this.htSize.height/2)]];
+		if(opts.path.length == 0) opts.path = [[0,0]];
 		this.pathFirstOpts = opts.pathopts || {x:0,y:0};
+		this.timecursor = this.delayBetweenTransitions;
 		var j = 0;
 		for(i = 0; i<this.numParticles; i++ ) {
 			if(j >= opts.path.length) j = 0;
@@ -67,7 +74,8 @@ var wmorph = {
 
 	morph: function(path, opts) {
 		path = path || this.path_heart;
-		opts = opts || {x:200, y:200};
+		if(path.length == 0) path = [[0,0]];
+		opts = opts || {x:0, y:0};
 		for(i = 0; i<this.numParticles; i++ ) {
 			var oParticle = this.particles[i];
 			var oFrom = this.oToLast[i] || [oParticle.get("x"), oParticle.get("y")];
@@ -79,13 +87,13 @@ var wmorph = {
 			}
 			var oTo = [ path[x][0]-opts.x, path[y][1]-opts.y ];
 			this.oToLast[i] = oTo;
-			this.timeline.add(this.timecursor, "transition", oParticle, 1000, {
+			this.timeline.add(this.timecursor, "transition", oParticle, this.delayTransition, {
 				from : oFrom,
 				to : oTo,
 				set : ["x", "y"],
 				effect : this.collie.Effect.easeInOut
 			});
 		}
-		this.timecursor = this.timecursor + 2000;
+		this.timecursor = this.timecursor + this.delayTransition + this.delayBetweenTransitions;
 	}
 }

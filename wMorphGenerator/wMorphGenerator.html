@@ -1,0 +1,259 @@
+<html>
+<head>
+        <script type="text/javascript" src="../lib/collie.min.js"></script>
+        <script type="text/javascript" src="../src/wmorph.js"></script>
+
+<script type="text/javascript">
+var canvas, ctx, flag = false,
+    prevX = 0,
+    currX = 0,
+    prevY = 0,
+    currY = 0,
+    dot_flag = false,
+    path = [],
+    paths = [];
+
+var config = {
+	density: null, 
+	width: 500, 
+	height: 400, 
+	color: null, 
+	radius: null, 
+	pathopts: null, 
+	repeat: true,
+	delayTransition: null,
+	delayBetweenTransitions: null 
+    }
+
+var x = "black",
+    y = 2;
+
+function init() {
+    canvas = document.getElementById('can');
+    ctx = canvas.getContext("2d");
+    w = canvas.width;
+    h = canvas.height;
+
+    canvas.addEventListener("mousemove", function (e) {
+        findxy('move', e)
+    }, false);
+    canvas.addEventListener("mousedown", function (e) {
+        findxy('down', e)
+    }, false);
+    canvas.addEventListener("mouseup", function (e) {
+        findxy('up', e)
+    }, false);
+    canvas.addEventListener("mouseout", function (e) {
+        findxy('out', e)
+    }, false);
+}
+
+function draw() {
+    ctx.beginPath();
+    ctx.moveTo(prevX, prevY);
+    ctx.lineTo(currX, currY);
+    ctx.strokeStyle = x;
+    ctx.lineWidth = y;
+    ctx.stroke();
+    ctx.closePath();
+
+    path=path.concat([[prevX, prevY]]);
+    path=path.concat([[currX, currY]]);
+}
+
+function erase() {
+	ctx.clearRect(0, 0, w, h);
+	path = [];
+        // document.getElementById("canvasimg").style.display = "none";
+}
+
+function reset() {
+    var m = confirm("Want to clear");
+    if (m) {
+        erase();
+	paths = [];
+    	wmorph.init(collie,{});
+    }
+}
+
+function addPath() {
+    /*
+    document.getElementById("canvasimg").style.border = "2px solid";
+    var dataURL = canvas.toDataURL();
+    document.getElementById("canvasimg").src = dataURL;
+    document.getElementById("canvasimg").style.display = "inline";
+    */
+
+    paths = paths.concat([path]);
+    apply();
+    erase();
+}
+
+function apply(){
+
+    config.density = parseInt(document.getElementById("config_density").value);
+    config.width = parseInt(document.getElementById("config_width").value);
+    config.height = parseInt(document.getElementById("config_height").value);
+    config.color = document.getElementById("config_color").value;
+    config.radius = parseInt(document.getElementById("config_radius").value);
+    config.pathopts =  (document.getElementById("config_dx").value && document.getElementById("config_dy").value)? {
+			"x":parseInt(document.getElementById("config_dx").value), 
+			"y":parseInt(document.getElementById("config_dy").value)
+			}:null;
+    config.repeat = Boolean(document.getElementById("config_repeat").value);
+    config.delayTransition = parseInt(document.getElementById("config_delayTrans").value);
+    config.delayBetweenTransitions = parseInt(document.getElementById("config_delayIntraTrans").value);
+
+ var maxpathlength = 1000;
+ for(p=0;p<paths.length;p++){
+    for(i=0;i<paths[p].length;i++){
+	if(paths[p].length > maxpathlength) { maxpathlength = paths[p].length; }
+    }
+ }
+
+    wmorph.init(collie,{
+                        density: config.density || maxpathlength, 
+                        width: config.width, 
+                        height: config.height, 
+                        color: config.color, 
+                        radius: config.radius, 
+                        path: paths[0], 
+                        pathopts:config.pathopts, 
+                        repeat: config.repeat,
+                        delayTransition: config.delayTransition,
+                        delayBetweenTransitions: config.delayBetweenTransitions
+                        });
+    if(paths.length>1){
+	for(geni=1;geni<paths.length;geni++){
+		wmorph.morph(paths[geni],config.pathopts);
+	}
+    }
+    wmorph.start();
+}
+
+function generate(){
+ var maxpathlength = 1000;
+ var generatedpaths = '';
+ for(p=0;p<paths.length;p++){
+    if(generatedpaths.length>0){
+       generatedpaths=generatedpaths+',\n\n';
+    }
+    var pathStr = '';
+    for(i=0;i<paths[p].length;i++){
+	if(paths[p].length > maxpathlength) { maxpathlength = paths[p].length; }
+	if(pathStr.length>0){
+		pathStr=pathStr+',';
+	}
+	pathStr=pathStr+'['+paths[p][i][0]+','+paths[p][i][1]+']';
+    }
+    generatedpaths=generatedpaths+'['+pathStr+']';
+ }
+
+ var html = "";
+ html = html + ("<html><head><title>wMorph</title>");
+ html = html + ("<script type='text/javascript' src='../lib/collie.min.js'>");
+ html = html + ("<\/script>");
+ html = html + ("<script type='text/javascript' src='../src/wmorph.js'>");
+ html = html + ("<\/script>");
+ html = html + ("</head><body>");
+ html = html + ("<div id='container' class='container'></div>");
+ html = html + ("<script type='text/javascript'>                                    \n");
+ html = html + ("    var paths = ["+generatedpaths+"];                              \n");
+ html = html + ("    wmorph.init(collie,{                                           \n");
+ html = html + ("       density: "+(config.density || maxpathlength)+",               \n"); 
+ html = html + ("       width: "+(config.width||"null")+",                                    \n"); 
+ html = html + ("       height: "+(config.height||"null") +",                                  \n");
+ html = html + ("       color: "+(config.color||"null") +",                                    \n");
+ html = html + ("       radius: "+(config.radius||"null")+",                                  \n");
+ html = html + ("       path: paths[0],                                             \n");
+ html = html + ("       pathopts:"+(config.pathopts?JSON.stringify(config.pathopts):"null")+",                               \n"); 
+ html = html + ("       repeat: "+(config.repeat||"null")+",                                  \n");
+ html = html + ("       delayTransition: "+(config.delayTransition||"null")+",                \n");
+ html = html + ("       delayBetweenTransitions: "+(config.delayBetweenTransitions||"null") +"\n");
+ html = html + ("       });                             \n");
+ html = html + ("   if(paths.length>1){                                 \n");
+ html = html + ("       for(geni=1;geni<paths.length;geni++){                    \n");
+ html = html + ("               wmorph.morph(paths[geni],"+(config.pathopts?JSON.stringify(config.pathopts):"null")+");    \n");
+ html = html + ("       }                                               \n");
+ html = html + ("   }                                                   \n");
+ html = html + ("   wmorph.start();                                     \n");
+ html = html + ("<\/script>");
+ html = html + ("</body></html>");
+ var opened = window.open("");
+ opened.document.write(html);
+}
+
+function findxy(res, e) {
+    if (res == 'down') {
+        prevX = currX;
+        prevY = currY;
+        currX = e.clientX - canvas.offsetLeft;
+        currY = e.clientY - canvas.offsetTop;
+
+        flag = true;
+        dot_flag = true;
+        if (dot_flag) {
+            ctx.beginPath();
+            ctx.fillStyle = x;
+            ctx.fillRect(currX, currY, 2, 2);
+            ctx.closePath();
+            dot_flag = false;
+        }
+    }
+    if (res == 'up' || res == "out") {
+        flag = false;
+    }
+    if (res == 'move') {
+        if (flag) {
+            prevX = currX;
+            prevY = currY;
+            currX = e.clientX - canvas.offsetLeft;
+            currY = e.clientY - canvas.offsetTop;
+            draw();
+        }
+    }
+}
+</script>
+</head>
+<body onload="init()">
+    <canvas id="can" width="400px" height="400px" style="position:absolute;top:5px;left:5px;border:2px solid;"></canvas>
+    <div id="container" class="container" style="position:absolute;top:5px;left:410px;border: 2px solid;"></div>
+    <input type="button" value="add" id="btn" size="30" onclick="addPath()" style="position:absolute;top:420px;left:5px;">
+    <input type="button" value="generate" id="clr" size="23" onclick="generate()" style="position:absolute;top:420px;left:100px;">
+    <input type="button" value="clear" id="clr" size="23" onclick="reset()" style="position:absolute;top:420px;left:200px;">
+    <!-- <img id="canvasimg" style="position:absolute;top:500px;left:5px;" style="display:none;"> -->
+
+    <label style="position:absolute;top:500;left:10">density</label>
+    <input type="text" id="config_density" style="position:absolute;top:500;left:100" value="1000">
+
+    <label style="position:absolute;top:530;left:10">width</label>
+    <input type="text" id="config_width" style="position:absolute;top:530;left:100" value="500">
+
+    <label style="position:absolute;top:560;left:10">height</label>
+    <input type="text" id="config_height" style="position:absolute;top:560;left:100" value="400">
+
+    <label style="position:absolute;top:590;left:10">color</label>
+    <input type="text" id="config_color" style="position:absolute;top:590;left:100" value="">
+
+    <label style="position:absolute;top:620;left:10">radius</label>
+    <input type="text" id="config_radius" style="position:absolute;top:620;left:100" value="10">
+
+    <label style="position:absolute;top:500;left:300">decalage x</label>
+    <input type="text" id="config_dx" style="position:absolute;top:500;left:400" value="0">
+
+    <label style="position:absolute;top:530;left:300">decalage y</label>
+    <input type="text" id="config_dy" style="position:absolute;top:530;left:400" value="0">
+
+    <label style="position:absolute;top:560;left:300">delay intra trans</label>
+    <input type="text" id="config_delayIntraTrans" style="position:absolute;top:560;left:400" value="500">
+
+    <label style="position:absolute;top:590;left:300">delay trans</label>
+    <input type="text" id="config_delayTrans" style="position:absolute;top:590;left:400" value="500">
+
+    <label style="position:absolute;top:620;left:300">repeat</label>
+    <input type="text" id="config_repeat" style="position:absolute;top:620;left:400" value="true">
+
+    <input type="button" value="apply config" id="cfg" size="23" onclick="apply()" style="position:absolute;top:620px;left:600px;">
+
+</body>
+</html>
